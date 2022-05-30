@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefec; }
+      
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 10%; /* Could be more or less, depending on screen size */
+      }
+      .modal-title {
+        text-align: center;
+      }
+      .modal-body {
+        text-align: center;
+      }
+      .modal-footer {
+        text-align: center;
+      }
+      .modal {
+       display: none; /* Hidden by default */
+       position: fixed; /* Stay in place */
+       z-index: 1; /* Sit on top */
+       left: 0;
+       top: 0;
+       width: 100%; /* Full width */
+       height: 100%; /* Full height */
+       overflow: auto; /* Enable scroll if needed */
+       background-color: rgb(0,0,0); /* Fallback color */
+       background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      var messages = document.getElementById('messages');
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+      var username=document.getElementById('username');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', input.value);
+          input.value = '';
+        }
+      });
+
+      socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = showTime() + msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+        document.getElementById("input").focus();
+      });
+      socket.on('server message', function(msg) {
+        var item = document.createElement('li');
+        item.style.background ="red";
+        item.textContent = showTime() + msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      window.addEventListener('load', (event) => {
+        myModal.style.display = "block";
+        document.getElementById("username").focus();
+      });
+
+      function showTime(){
+        var currentDay = new Date();
+        var currentTime = currentDay.getHours() + ":" + (currentDay.getMinutes()<10?'0':'') + currentDay.getMinutes()
+         + ":" + (currentDay.getSeconds()<10?'0':'') + currentDay.getSeconds() + "  ";
+        return currentTime;
+      }
+    </script>
+  </body>
+
+
+  <div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+  
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <script>
+            function hideModal() {
+              myModal.style.display = "none";
+              socket.emit('adduser', document.getElementById('username').value);
+              document.getElementById("input").focus();
+            }
+            function hidemodalKey(e) {
+              var key = 'which' in e ? e.which : e.keyCode;
+              if (key == 13){
+                myModal.style.display = "none";
+                socket.emit('adduser', document.getElementById('username').value);
+                document.getElementById("input").focus();
+              }
+            }
+          </script>
+          <h4 class="modal-title">Enter Username</h4>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="username" name="username" onkeyup="hidemodalKey(event)">
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="submitBtn" class="btn btn-default" onclick="hideModal()">Submit</button>
+        </div>
+      </div>
+  
+    </div>
+  </div>
+
+  
+</html>
